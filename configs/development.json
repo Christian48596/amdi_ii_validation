@@ -1,0 +1,49 @@
+{
+  "amdi": {
+    "alpha": 0.010,
+    "beta": 0.0002,
+    "tau": 1e-7,
+    "sigma_c": 0.12,
+    "refinement_decay": 0.35,
+    "h": 0.60,
+    "initial_threshold": 0.012,
+    "min_level": 2,
+    "refine_fraction": 0.10,
+    "coarsen_fraction": 0.10,
+    "zeta": 1e-6
+  },
+  "data": {
+    "train_n": 32,
+    "noise_sigma": 0.08,
+    "train_image_seeds": [0,1,2,3],
+    "validation_image_seeds": [100,101],
+    "test_image_seeds": [1000,1001,1002,1003]
+  },
+  "training": {
+    "seed": 20260811,
+    "n_steps": 4
+  },
+  "network": {
+    "actor_hidden": [32,32],
+    "critic_hidden": [32,32],
+    "activation": "tanh"
+  },
+  "reward": {
+    "lambda_err": 1.0,
+    "lambda_occ": 0.15,
+    "lambda_sw": 0.02,
+    "epsilon_num": 1e-12
+  },
+  "ppo": {
+    "gamma": 1.0,
+    "lambda_gae": 0.95,
+    "epsilon_ppo": 0.2,
+    "c_v": 0.5,
+    "c_h": 0.01,
+    "learning_rate": 0.0001,
+    "epochs_per_update": 2,
+    "trajectories_per_update": 2,
+    "updates": 3,
+    "max_grad_norm": 0.5
+  }
+}
