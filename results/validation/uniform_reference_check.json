@@ -1,0 +1,8 @@
+{
+  "all_safeguards_accepted": true,
+  "basis_size": 1024,
+  "energy_monotone": true,
+  "expected_full_basis": 1024,
+  "n_states": 7,
+  "pass": true
+}

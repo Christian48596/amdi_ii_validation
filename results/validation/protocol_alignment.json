@@ -1,0 +1,8 @@
+{
+  "C_rel_baseline": 0.15625,
+  "C_rel_control": 0.15625,
+  "final_relative_difference": 0.0,
+  "interpretation": "The modular deterministic control reproduces the deterministic AMDI propagate-then-adapt pathway exactly.",
+  "pass": true,
+  "tree_distance": 0
+}

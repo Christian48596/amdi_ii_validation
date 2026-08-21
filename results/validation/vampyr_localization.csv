@@ -1,0 +1,5 @@
+learned_max_level,learned_mean_level,amdi_max_level,amdi_mean_level,region,vampyr_max_effective_level,vampyr_mean_effective_level
+5,3.390625,4,2.875,constant,1.0,1.0
+5,3.65625,4,3.25,gradient,1.0,1.0
+5,3.4375,5,3.3125,edge,7.0,6.536585365853658
+5,4.90625,5,4.046875,texture,4.0,4.0

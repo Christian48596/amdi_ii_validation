@@ -1,0 +1,502 @@
+{
+  "deterministic_regression": {
+    "basis_size_direct": 190,
+    "basis_size_wrapper": 190,
+    "image_relative_error": 0.0,
+    "max_coefficient_abs_error": 0.0,
+    "pass": true,
+    "tree_identical": true
+  },
+  "final_protocol": {
+    "entropy_coefficient_c_h": 0.02,
+    "epsilon_ppo": 0.1,
+    "learning_rate": 5e-05,
+    "ordering": "propagate_then_adapt",
+    "pareto_weights": [
+      0.03,
+      0.08,
+      0.15,
+      0.25,
+      0.3,
+      0.6
+    ],
+    "ppo_updates": 400,
+    "robustness_training_seeds": [
+      20260811,
+      20260817,
+      20260823
+    ],
+    "training_seed_selected": 20260811,
+    "trajectories_per_update": 16
+  },
+  "holdout": [
+    {
+      "C_rel_mean": 0.13736979166666666,
+      "RMSE_mean": 0.053906892055460474,
+      "RMSE_std": 0.007394011219316426,
+      "SSIM_mean": 0.8085125486085362,
+      "method": "AMDI",
+      "n_cases": 9,
+      "reference_error_mean": 0.17496419044413442,
+      "switching_mean": 0.00021701388888888888
+    },
+    {
+      "C_rel_mean": 0.2666015625,
+      "RMSE_mean": 0.05306480249629621,
+      "RMSE_std": 0.0031054240065453535,
+      "SSIM_mean": 0.7989935641859282,
+      "method": "Learned AMDI",
+      "n_cases": 9,
+      "reference_error_mean": 0.13656908890512015,
+      "switching_mean": 0.021321614583333332
+    },
+    {
+      "C_rel_mean": 1.0,
+      "RMSE_mean": 0.07141029087890832,
+      "RMSE_std": 0.0030888121201892295,
+      "SSIM_mean": 0.7014968446432056,
+      "method": "Uniform AMDI reference",
+      "n_cases": 9,
+      "reference_error_mean": 0.0,
+      "switching_mean": 0.0
+    }
+  ],
+  "pareto": [
+    {
+      "C_rel_mean": 0.950927734375,
+      "RMSE_mean": 0.06403386665028743,
+      "SSIM_mean": 0.7338300554872339,
+      "lambda_occ": 0.03,
+      "reference_error_mean": 0.02296453895502311
+    },
+    {
+      "C_rel_mean": 0.754638671875,
+      "RMSE_mean": 0.06208607404147082,
+      "SSIM_mean": 0.7469181083543235,
+      "lambda_occ": 0.08,
+      "reference_error_mean": 0.056986104055554265
+    },
+    {
+      "C_rel_mean": 0.260986328125,
+      "RMSE_mean": 0.05241315086871027,
+      "SSIM_mean": 0.8143046006561958,
+      "lambda_occ": 0.15,
+      "reference_error_mean": 0.13807815104934007
+    },
+    {
+      "C_rel_mean": 0.156982421875,
+      "RMSE_mean": 0.05140622133375324,
+      "SSIM_mean": 0.8201866554586911,
+      "lambda_occ": 0.25,
+      "reference_error_mean": 0.16616399864179696
+    },
+    {
+      "C_rel_mean": 0.11376953125,
+      "RMSE_mean": 0.054144095524258126,
+      "SSIM_mean": 0.7984390109056156,
+      "lambda_occ": 0.3,
+      "reference_error_mean": 0.18058763282348284
+    },
+    {
+      "C_rel_mean": 0.09912109375,
+      "RMSE_mean": 0.05439162990882751,
+      "SSIM_mean": 0.7908861135604932,
+      "lambda_occ": 0.6,
+      "reference_error_mean": 0.1849137119085944
+    }
+  ],
+  "protocol_alignment": {
+    "C_rel_baseline": 0.15625,
+    "C_rel_control": 0.15625,
+    "final_relative_difference": 0.0,
+    "interpretation": "The modular deterministic control reproduces the deterministic AMDI propagate-then-adapt pathway exactly.",
+    "pass": true,
+    "tree_distance": 0
+  },
+  "reference_check": {
+    "all_safeguards_accepted": true,
+    "basis_size": 1024,
+    "energy_monotone": true,
+    "expected_full_basis": 1024,
+    "n_states": 7,
+    "pass": true
+  },
+  "resolution_transfer": [
+    {
+      "C_rel_mean": "0.136474609375",
+      "RMSE_mean": "0.05377698865651086",
+      "SSIM_mean": "0.8062263145860651",
+      "method": "AMDI",
+      "n": "32",
+      "reference_error_mean": "0.17300722714464323"
+    },
+    {
+      "C_rel_mean": "0.249267578125",
+      "RMSE_mean": "0.05465591996204336",
+      "SSIM_mean": "0.805119791875503",
+      "method": "Learned AMDI",
+      "n": "32",
+      "reference_error_mean": "0.1381385030332407"
+    },
+    {
+      "C_rel_mean": "1.0",
+      "RMSE_mean": "0.07079673273833151",
+      "SSIM_mean": "0.7126594839619744",
+      "method": "Uniform AMDI reference",
+      "n": "32",
+      "reference_error_mean": "0.0"
+    },
+    {
+      "C_rel_mean": "0.0364990234375",
+      "RMSE_mean": "0.04673412212051803",
+      "SSIM_mean": "0.7239918413038069",
+      "method": "AMDI",
+      "n": "64",
+      "reference_error_mean": "0.17533910368233185"
+    },
+    {
+      "C_rel_mean": "0.0408935546875",
+      "RMSE_mean": "0.04404355648833035",
+      "SSIM_mean": "0.7374037112658426",
+      "method": "Learned AMDI",
+      "n": "64",
+      "reference_error_mean": "0.17104301432452054"
+    },
+    {
+      "C_rel_mean": "1.0",
+      "RMSE_mean": "0.06670797997902186",
+      "SSIM_mean": "0.5143613865184364",
+      "method": "Uniform AMDI reference",
+      "n": "64",
+      "reference_error_mean": "0.0"
+    },
+    {
+      "C_rel_mean": "0.008758544921875",
+      "RMSE_mean": "0.04529111470386972",
+      "SSIM_mean": "0.6795888630758233",
+      "method": "AMDI",
+      "n": "128",
+      "reference_error_mean": "0.1571197597125839"
+    },
+    {
+      "C_rel_mean": "0.009307861328125",
+      "RMSE_mean": "0.043178453853080404",
+      "SSIM_mean": "0.6902895910903609",
+      "method": "Learned AMDI",
+      "n": "128",
+      "reference_error_mean": "0.15381541213038097"
+    },
+    {
+      "C_rel_mean": "1.0",
+      "RMSE_mean": "0.05572662504429461",
+      "SSIM_mean": "0.4229262080942023",
+      "method": "Uniform AMDI reference",
+      "n": "128",
+      "reference_error_mean": "0.0"
+    }
+  ],
+  "reward_ablation": [
+    {
+      "C_rel_mean": "0.277099609375",
+      "RMSE_mean": "0.05414166760368665",
+      "ablation": "full",
+      "reference_error_mean": "0.1376924936849077",
+      "switching_mean": "0.0220947265625"
+    },
+    {
+      "C_rel_mean": "0.99560546875",
+      "RMSE_mean": "0.06483060296050971",
+      "ablation": "no_occupancy",
+      "reference_error_mean": "0.020802088897741097",
+      "switching_mean": "0.141845703125"
+    },
+    {
+      "C_rel_mean": "0.2236328125",
+      "RMSE_mean": "0.05260329093897757",
+      "ablation": "no_switching",
+      "reference_error_mean": "0.1512614599652795",
+      "switching_mean": "0.01318359375"
+    }
+  ],
+  "training_seed_aggregate": {
+    "C_rel": {
+      "mean": 0.236083984375,
+      "std": 0.055952429457375816
+    },
+    "RMSE": {
+      "mean": 0.052180242253584586,
+      "std": 0.0018304264491953027
+    },
+    "SSIM": {
+      "mean": 0.8152265205149435,
+      "std": 0.009071149428315878
+    },
+    "n_training_seeds": 3,
+    "reference_error": {
+      "mean": 0.14886133322258574,
+      "std": 0.014756575752003528
+    },
+    "switching": {
+      "mean": 0.015055338541666666,
+      "std": 0.009556891963961063
+    }
+  },
+  "training_seed_robustness": [
+    {
+      "C_rel": 0.2939453125,
+      "PSNR": 24.802266661048282,
+      "RMSE": 0.05752897907001672,
+      "SSIM": 0.8316591267125875,
+      "image_seed": 1000,
+      "kind": "random_multiscale",
+      "method": "Learned AMDI",
+      "n": 32,
+      "noise_seed": 71000,
+      "noise_sigma": 0.08,
+      "reference_error": 0.11674818686100544,
+      "runtime_s": 0.5803276658989489,
+      "switching_mean": 0.0234375,
+      "training_seed": 20260811
+    },
+    {
+      "C_rel": 0.302734375,
+      "PSNR": 25.126683580659513,
+      "RMSE": 0.0554199106124371,
+      "SSIM": 0.749107703743021,
+      "image_seed": 1001,
+      "kind": "random_multiscale",
+      "method": "Learned AMDI",
+      "n": 32,
+      "noise_seed": 71001,
+      "noise_sigma": 0.08,
+      "reference_error": 0.15291097052672414,
+      "runtime_s": 0.5990225421264768,
+      "switching_mean": 0.02294921875,
+      "training_seed": 20260811
+    },
+    {
+      "C_rel": 0.302734375,
+      "PSNR": 24.821666683687234,
+      "RMSE": 0.057400630898367694,
+      "SSIM": 0.8110337363915701,
+      "image_seed": 1002,
+      "kind": "random_multiscale",
+      "method": "Learned AMDI",
+      "n": 32,
+      "noise_seed": 71002,
+      "noise_sigma": 0.08,
+      "reference_error": 0.1147954425291416,
+      "runtime_s": 0.5895760001149029,
+      "switching_mean": 0.0244140625,
+      "training_seed": 20260811
+    },
+    {
+      "C_rel": 0.220703125,
+      "PSNR": 26.921668083334623,
+      "RMSE": 0.04507301356741599,
+      "SSIM": 0.8336465331287759,
+      "image_seed": 1003,
+      "kind": "random_multiscale",
+      "method": "Learned AMDI",
+      "n": 32,
+      "noise_seed": 71003,
+      "noise_sigma": 0.08,
+      "reference_error": 0.16620883959786742,
+      "runtime_s": 0.43387000006623566,
+      "switching_mean": 0.01708984375,
+      "training_seed": 20260811
+    },
+    {
+      "C_rel": 0.2734375,
+      "PSNR": 25.101967380387656,
+      "RMSE": 0.05557783575263685,
+      "SSIM": 0.8460477793311321,
+      "image_seed": 1000,
+      "kind": "random_multiscale",
+      "method": "Learned AMDI",
+      "n": 32,
+      "noise_seed": 71000,
+      "noise_sigma": 0.08,
+      "reference_error": 0.12067708905302513,
+      "runtime_s": 0.5369477497879416,
+      "switching_mean": 0.02001953125,
+      "training_seed": 20260817
+    },
+    {
+      "C_rel": 0.2646484375,
+      "PSNR": 25.424748806810165,
+      "RMSE": 0.05355038032975218,
+      "SSIM": 0.7560806519438812,
+      "image_seed": 1001,
+      "kind": "random_multiscale",
+      "method": "Learned AMDI",
+      "n": 32,
+      "noise_seed": 71001,
+      "noise_sigma": 0.08,
+      "reference_error": 0.16209557189312077,
+      "runtime_s": 0.5477321248035878,
+      "switching_mean": 0.0185546875,
+      "training_seed": 20260817
+    },
+    {
+      "C_rel": 0.28515625,
+      "PSNR": 24.87454362249499,
+      "RMSE": 0.0570522555542582,
+      "SSIM": 0.8107823816766488,
+      "image_seed": 1002,
+      "kind": "random_multiscale",
+      "method": "Learned AMDI",
+      "n": 32,
+      "noise_seed": 71002,
+      "noise_sigma": 0.08,
+      "reference_error": 0.11816176557251744,
+      "runtime_s": 0.5721496250480413,
+      "switching_mean": 0.0234375,
+      "training_seed": 20260817
+    },
+    {
+      "C_rel": 0.197265625,
+      "PSNR": 27.199646104479548,
+      "RMSE": 0.043653361788460555,
+      "SSIM": 0.8463968664883234,
+      "image_seed": 1003,
+      "kind": "random_multiscale",
+      "method": "Learned AMDI",
+      "n": 32,
+      "noise_seed": 71003,
+      "noise_sigma": 0.08,
+      "reference_error": 0.17240420181735552,
+      "runtime_s": 0.4136491660028696,
+      "switching_mean": 0.01416015625,
+      "training_seed": 20260817
+    },
+    {
+      "C_rel": 0.185546875,
+      "PSNR": 25.58880873688151,
+      "RMSE": 0.05254840799076745,
+      "SSIM": 0.843870711135089,
+      "image_seed": 1000,
+      "kind": "random_multiscale",
+      "method": "Learned AMDI",
+      "n": 32,
+      "noise_seed": 71000,
+      "noise_sigma": 0.08,
+      "reference_error": 0.14143912029774688,
+      "runtime_s": 0.4344158750027418,
+      "switching_mean": 0.00537109375,
+      "training_seed": 20260823
+    },
+    {
+      "C_rel": 0.1884765625,
+      "PSNR": 25.832360525105997,
+      "RMSE": 0.05109542004453056,
+      "SSIM": 0.7800317287273515,
+      "image_seed": 1001,
+      "kind": "random_multiscale",
+      "method": "Learned AMDI",
+      "n": 32,
+      "noise_seed": 71001,
+      "noise_sigma": 0.08,
+      "reference_error": 0.18707028366825465,
+      "runtime_s": 0.4135804590769112,
+      "switching_mean": 0.00390625,
+      "training_seed": 20260823
+    },
+    {
+      "C_rel": 0.1796875,
+      "PSNR": 25.550989694599227,
+      "RMSE": 0.05277770669577943,
+      "SSIM": 0.8254851760048323,
+      "image_seed": 1002,
+      "kind": "random_multiscale",
+      "method": "Learned AMDI",
+      "n": 32,
+      "noise_seed": 71002,
+      "noise_sigma": 0.08,
+      "reference_error": 0.14282524807051836,
+      "runtime_s": 0.40098237502388656,
+      "switching_mean": 0.00390625,
+      "training_seed": 20260823
+    },
+    {
+      "C_rel": 0.138671875,
+      "PSNR": 27.035727176683622,
+      "RMSE": 0.04448500473859232,
+      "SSIM": 0.848575850896109,
+      "image_seed": 1003,
+      "kind": "random_multiscale",
+      "method": "Learned AMDI",
+      "n": 32,
+      "noise_seed": 71003,
+      "noise_sigma": 0.08,
+      "reference_error": 0.19099927878375142,
+      "runtime_s": 0.3040029581170529,
+      "switching_mean": 0.00341796875,
+      "training_seed": 20260823
+    }
+  ],
+  "training_seed_summary": [
+    {
+      "C_rel_mean": 0.280029296875,
+      "RMSE_mean": 0.053855633537059376,
+      "SSIM_mean": 0.8063617749939886,
+      "reference_error_mean": 0.13766585987868465,
+      "switching_mean": 0.02197265625,
+      "training_seed": 20260811
+    },
+    {
+      "C_rel_mean": 0.255126953125,
+      "RMSE_mean": 0.052458458356276945,
+      "SSIM_mean": 0.8148269198599963,
+      "reference_error_mean": 0.14333465708400472,
+      "switching_mean": 0.01904296875,
+      "training_seed": 20260817
+    },
+    {
+      "C_rel_mean": 0.173095703125,
+      "RMSE_mean": 0.05022663486741744,
+      "SSIM_mean": 0.8244908666908454,
+      "reference_error_mean": 0.16558348270506784,
+      "switching_mean": 0.004150390625,
+      "training_seed": 20260823
+    }
+  ],
+  "vampyr_localization": [
+    {
+      "amdi_max_level": "4",
+      "amdi_mean_level": "2.875",
+      "learned_max_level": "5",
+      "learned_mean_level": "3.390625",
+      "region": "constant",
+      "vampyr_max_effective_level": "1.0",
+      "vampyr_mean_effective_level": "1.0"
+    },
+    {
+      "amdi_max_level": "4",
+      "amdi_mean_level": "3.25",
+      "learned_max_level": "5",
+      "learned_mean_level": "3.65625",
+      "region": "gradient",
+      "vampyr_max_effective_level": "1.0",
+      "vampyr_mean_effective_level": "1.0"
+    },
+    {
+      "amdi_max_level": "5",
+      "amdi_mean_level": "3.3125",
+      "learned_max_level": "5",
+      "learned_mean_level": "3.4375",
+      "region": "edge",
+      "vampyr_max_effective_level": "7.0",
+      "vampyr_mean_effective_level": "6.536585365853658"
+    },
+    {
+      "amdi_max_level": "5",
+      "amdi_mean_level": "4.046875",
+      "learned_max_level": "5",
+      "learned_mean_level": "4.90625",
+      "region": "texture",
+      "vampyr_max_effective_level": "4.0",
+      "vampyr_mean_effective_level": "4.0"
+    }
+  ]
+}
