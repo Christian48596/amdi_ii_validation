@@ -1,0 +1,16 @@
+name: learned-amdi
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy
+  - scipy
+  - matplotlib
+  - scikit-image
+  - pandas
+  - pytest
+  - vampyr
+  - pytorch
+  - pip
+  - pip:
+      - -e .

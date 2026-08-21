@@ -1,0 +1,296 @@
+#!/usr/bin/env python3
+"""Final publication figures for Learned AMDI.
+
+This script reads ONLY publication_summary_FINAL.json.
+No training and no numerical simulation are performed.
+
+Display names used in every figure:
+    AMDI
+    Learned AMDI
+    VAMPyR/MRCPP
+
+"Haar" is intentionally omitted from plot legends. The basis can be stated
+once in the manuscript caption/method section instead of cluttering the plot.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+def F(x):
+    return float(x)
+
+
+def panel(ax, label):
+    # Keep panel labels INSIDE the axes so they never collide with neighbours.
+    ax.text(
+        0.025, 0.975, label,
+        transform=ax.transAxes,
+        ha="left", va="top",
+        fontsize=10, fontweight="bold",
+        bbox=dict(facecolor="white", edgecolor="none", alpha=0.82, pad=0.8),
+        zorder=20,
+    )
+
+
+def save(fig, outdir, stem):
+    outdir.mkdir(parents=True, exist_ok=True)
+    fig.savefig(outdir / f"{stem}.png", dpi=600, bbox_inches="tight")
+    fig.savefig(outdir / f"{stem}.pdf", bbox_inches="tight")
+    plt.close(fig)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--summary", default="publication_summary_FINAL.json")
+    parser.add_argument("--outdir", default="IMG")
+    args = parser.parse_args()
+
+    summary = json.loads(Path(args.summary).read_text(encoding="utf-8"))
+    outdir = Path(args.outdir)
+
+    plt.rcParams.update({
+        "font.size": 9,
+        "axes.labelsize": 9,
+        "axes.titlesize": 9,
+        "xtick.labelsize": 8,
+        "ytick.labelsize": 8,
+        "legend.fontsize": 8,
+        "lines.linewidth": 1.45,
+        "lines.markersize": 5.5,
+    })
+
+    # ================================================================
+    # 1. Accuracy--representation Pareto family
+    # ================================================================
+    rows = sorted(summary["pareto"], key=lambda r: F(r["C_rel_mean"]))
+    crel = np.array([F(r["C_rel_mean"]) for r in rows])
+    eref = np.array([F(r["reference_error_mean"]) for r in rows])
+    rmse = np.array([F(r["RMSE_mean"]) for r in rows])
+    ssim = np.array([F(r["SSIM_mean"]) for r in rows])
+    lam  = np.array([F(r["lambda_occ"]) for r in rows])
+
+    # Wider figure + large wspace: y-label of panel (b) cannot enter panel (a).
+    fig, axes = plt.subplots(1, 3, figsize=(9.20, 2.90))
+    fig.subplots_adjust(
+        left=0.070, right=0.99, bottom=0.20, top=0.94, wspace=0.62
+    )
+
+    quantities = [
+        (eref, r"$E_{\rm ref}$ [-]"),
+        (rmse, "RMSE [-]"),
+        (ssim, "SSIM [-]"),
+    ]
+    for j, (ax, (vals, ylabel)) in enumerate(zip(axes, quantities)):
+        ax.plot(crel, vals, "o-")
+        ax.set_xlabel(r"$C_{\rm rel}$ [-]")
+        ax.set_ylabel(ylabel, labelpad=4)
+        ax.grid(True, alpha=0.20)
+        ax.margins(x=0.08, y=0.12)
+        panel(ax, f"({chr(97+j)})")
+
+
+    # Only identify operating points discussed explicitly in the manuscript.
+    for x, y, w in zip(crel, eref, lam):
+        if np.isclose(w, 0.25):
+            axes[0].annotate(
+                r"$\lambda_{\rm occ}=0.25$", (x, y),
+                xytext=(12, -12), textcoords="offset points", fontsize=7.0,
+                bbox=dict(facecolor="white", edgecolor="none", alpha=0.88, pad=0.5),
+            )
+        elif np.isclose(w, 0.15):
+            axes[0].annotate(
+                r"$\lambda_{\rm occ}=0.15$", (x, y),
+                xytext=(10, 6), textcoords="offset points", fontsize=7.0,
+                bbox=dict(facecolor="white", edgecolor="none", alpha=0.88, pad=0.5),
+            )
+
+    save(fig, outdir, "Fig_pareto_accuracy_complexity")
+
+    # ================================================================
+    # 2. Resolution transfer
+    # ================================================================
+    transfer = summary["resolution_transfer"]
+    method_map = {
+        "AMDI": "AMDI",
+        "Learned AMDI": "Learned AMDI",
+    }
+    ns = sorted({int(r["n"]) for r in transfer})
+
+    fields = [
+        ("RMSE_mean", "RMSE [-]"),
+        ("SSIM_mean", "SSIM [-]"),
+        ("reference_error_mean", r"$E_{\rm ref}$ [-]"),
+        ("C_rel_mean", r"$C_{\rm rel}$ [-]"),
+    ]
+
+    fig, axes = plt.subplots(2, 2, figsize=(7.8, 5.35))
+    fig.subplots_adjust(
+        left=0.10, right=0.985, bottom=0.10, top=0.87,
+        wspace=0.30, hspace=0.38
+    )
+    axes = axes.ravel()
+
+    handles = labels = None
+    for j, (ax, (key, ylabel)) in enumerate(zip(axes, fields)):
+        for raw_name, display_name in method_map.items():
+            ys = []
+            for n in ns:
+                row = next(
+                    r for r in transfer
+                    if int(r["n"]) == n and r["method"] == raw_name
+                )
+                ys.append(F(row[key]))
+            marker = "s" if display_name == "AMDI" else "o"
+            ax.plot(ns, ys, marker=marker, label=display_name)
+
+        ax.set_xlabel(r"linear resolution $n$ [pixels]")
+        ax.set_ylabel(ylabel)
+        ax.set_xscale("log", base=2)
+        ax.set_xticks(ns)
+        ax.set_xticklabels([str(v) for v in ns])
+        ax.grid(True, alpha=0.20)
+        ax.margins(y=0.10)
+        panel(ax, f"({chr(97+j)})")
+
+        if handles is None:
+            handles, labels = ax.get_legend_handles_labels()
+
+    fig.legend(
+        handles, labels, loc="upper center",
+        bbox_to_anchor=(0.54, 0.975), ncol=2, frameon=False
+    )
+    save(fig, outdir, "Fig_resolution_transfer")
+
+    # ================================================================
+    # 3. Training-seed robustness + reward ablation
+    # ================================================================
+    seeds = sorted(
+        summary["training_seed_summary"],
+        key=lambda r: int(r["training_seed"])
+    )
+    ablation = summary["reward_ablation"]
+
+    fig, axes = plt.subplots(1, 3, figsize=(9.35, 3.00))
+    fig.subplots_adjust(
+        left=0.070, right=0.99, bottom=0.20, top=0.90, wspace=0.66
+    )
+
+    # (a) Seed operating points
+    ax = axes[0]
+    offsets = {
+        20260811: (7, 5),
+        20260817: (7, 5),
+        20260823: (7, -15),
+    }
+    for row in seeds:
+        seed = int(row["training_seed"])
+        x = F(row["C_rel_mean"])
+        y = F(row["reference_error_mean"])
+        ax.plot(x, y, "o")
+        ax.annotate(
+            str(seed)[-2:], (x, y),
+            xytext=offsets[seed], textcoords="offset points", fontsize=7.2,
+            bbox=dict(facecolor="white", edgecolor="none", alpha=0.84, pad=0.4),
+        )
+    ax.set_xlabel(r"$C_{\rm rel}$ [-]")
+    ax.set_ylabel(r"$E_{\rm ref}$ [-]")
+    ax.grid(True, alpha=0.20)
+    ax.margins(x=0.18, y=0.20)
+    panel(ax, "(a)")
+
+    # (b) Categorical seed comparison -- no misleading connecting lines
+    ax = axes[1]
+    pos = np.arange(len(seeds), dtype=float)
+    suffix = [str(int(r["training_seed"]))[-2:] for r in seeds]
+    rm = np.array([F(r["RMSE_mean"]) for r in seeds])
+    ss = np.array([F(r["SSIM_mean"]) for r in seeds])
+
+    ax.plot(pos - 0.07, rm/rm.mean(), "o", linestyle="none", label="RMSE / mean")
+    ax.plot(pos + 0.07, ss/ss.mean(), "s", linestyle="none", label="SSIM / mean")
+    ax.axhline(1.0, linewidth=0.8)
+    ax.set_xticks(pos)
+    ax.set_xticklabels(suffix)
+    ax.set_xlabel("training seed suffix [-]")
+    ax.set_ylabel("normalized metric [-]", labelpad=3)
+    ax.grid(True, alpha=0.20)
+    ax.margins(x=0.20, y=0.18)
+    ax.legend(
+        frameon=False, loc="upper center",
+        bbox_to_anchor=(0.52, 0.98), ncol=1
+    )
+    panel(ax, "(b)")
+
+    # (c) Reward ablation
+    ax = axes[2]
+    cfg = {
+        "full":          (8, -15, "Full reward"),
+        "no_switching":  (8,  7,  "No switching"),
+        "no_occupancy": (-62, 8,  "No occupancy"),
+    }
+    for row in ablation:
+        key = row["ablation"]
+        x = F(row["C_rel_mean"])
+        y = F(row["reference_error_mean"])
+        ax.plot(x, y, "o")
+        dx, dy, txt = cfg[key]
+        ax.annotate(
+            txt, (x, y), xytext=(dx, dy),
+            textcoords="offset points", fontsize=7.1,
+            bbox=dict(facecolor="white", edgecolor="none", alpha=0.84, pad=0.4),
+        )
+    ax.set_xlabel(r"$C_{\rm rel}$ [-]")
+    ax.set_ylabel(r"$E_{\rm ref}$ [-]", labelpad=4)
+    ax.grid(True, alpha=0.20)
+    ax.margins(x=0.14, y=0.17)
+    panel(ax, "(c)")
+
+    save(fig, outdir, "Fig_robustness_ablation")
+
+    # ================================================================
+    # 4. VAMPyR/MRCPP localization cross-check
+    # ================================================================
+    vr = summary["vampyr_localization"]
+    regions = [r["region"] for r in vr]
+    xpos = np.arange(len(regions), dtype=float)
+    width = 0.24
+
+    amdi = np.array([F(r["amdi_mean_level"]) for r in vr])
+    learned = np.array([F(r["learned_mean_level"]) for r in vr])
+    vampyr = np.array([F(r["vampyr_mean_effective_level"]) for r in vr])
+
+    fig, ax = plt.subplots(figsize=(6.5, 3.45))
+    fig.subplots_adjust(left=0.12, right=0.985, bottom=0.19, top=0.78)
+
+    # NO "Haar" in the legend.
+    b1 = ax.bar(xpos-width, amdi, width=width, label="AMDI")
+    b2 = ax.bar(xpos, learned, width=width, label="Learned AMDI")
+    b3 = ax.bar(xpos+width, vampyr, width=width, label="VAMPyR/MRCPP")
+
+    ax.set_xticks(xpos)
+    ax.set_xticklabels(regions)
+    ax.set_xlabel("region [-]")
+    ax.set_ylabel("mean refinement/effective level [-]")
+    ax.grid(True, axis="y", alpha=0.20)
+    ax.set_ylim(0, max(amdi.max(), learned.max(), vampyr.max())*1.18)
+
+    ax.legend(
+        frameon=False, ncol=3, loc="upper center",
+        bbox_to_anchor=(0.5, 1.28)
+    )
+
+    for bars in (b1, b2, b3):
+        ax.bar_label(bars, fmt="%.2f", padding=2, fontsize=7.0)
+
+    save(fig, outdir, "Fig_vampyr_localization")
+
+    print("Final metric figures written to:", outdir.resolve())
+
+
+if __name__ == "__main__":
+    main()
