@@ -86,4 +86,14 @@ The final adaptive decision is not followed by an extra diffusion step.
 
 ## Reported quantities
 
-`E_ref` and `C_rel` are terminal quantities. The switching measure reported in aggregate tables is the arithmetic mean over the six adaptive decisions. RMSE and SSIM are evaluated on the terminal reconstruction against the clean image.
+`E_ref` and `C_rel` are terminal quantities. The switching measure reported in aggregate tables is the arithmetic mean over the six adaptive decisions. Terminal reconstructions are clipped pointwise to `[0,1]` before RMSE and SSIM are evaluated against the clean image.
+
+## Section 5 controls
+
+The retain-tree control keeps the threshold-initialized tree for all six outer iterations. The top-`K` and fixed-threshold controls refine once after the first propagation and retain thereafter. Their parameters are selected on validation images `100--103` with noise seed `20000 + image_seed` and frozen before testing.
+
+The PPO and control frontiers use the same four test images and noise realizations. The `lambda_occ = 0.15` PPO point reuses the selected checkpoint. Transferred top-`K` and threshold parameters are not retuned at `64x64` or `128x128`.
+
+## VAMPyR/MRCPP
+
+The VAMPyR calculation is an order-five projection of the clean analytic target with precision `1e-3` and maximum depth eight. Its effective levels are qualitative localization indicators and are not numerically equated with Haar levels or treated as validation of the learned trajectory.

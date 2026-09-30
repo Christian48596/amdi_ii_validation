@@ -1,8 +1,9 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite the associated manuscript."
 title: "Learned Adaptive Multiresolution Diffusion Imaging: reproducibility code and data"
-version: 1.0.0
-date-released: 2026-08-21
+version: 1.1.0
+date-released: 2026-09-30
+license: MIT
 authors:
   - family-names: Tantardini
     given-names: Christian
@@ -10,8 +11,8 @@ authors:
     given-names: Stig Rune
   - family-names: Eikås
     given-names: Roberto Di Remigio
-  - family-names: Frediani
-    given-names: Luca
+  - family-names: Beck
+    given-names: Joakim Henrik
 preferred-citation:
   type: article
   title: "Learned Adaptive Multiresolution Diffusion Imaging"
@@ -22,5 +23,5 @@ preferred-citation:
       given-names: Stig Rune
     - family-names: Eikås
       given-names: Roberto Di Remigio
-    - family-names: Frediani
-      given-names: Luca
+    - family-names: Beck
+      given-names: Joakim Henrik
