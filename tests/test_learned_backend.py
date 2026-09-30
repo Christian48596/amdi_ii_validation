@@ -46,3 +46,18 @@ def test_modular_control_matches_baseline_order_exactly():
     assert b1.tree.refined == b2.tree.refined
     assert np.linalg.norm(b1.current_field()-b2.current_field()) < 1e-14
     assert abs(b1.occupancy-b2.occupancy) < 1e-15
+
+
+def test_learned_update_executes_refinement_after_propagation():
+    """Exercise the learned propagate-then-adapt path, not only its masks."""
+    b = backend()
+    initial_dofs = b.n_active
+
+    diag = b.propagate_for_adaptation()
+    record = next(r for r in b.candidate_records() if r.mask[REFINE])
+    diag = b.learned_adapt({record.cell: REFINE}, diag)
+
+    assert diag.proposed_refine == 1
+    assert diag.executed_refine == 1
+    assert b.n_active == initial_dofs + 3
+    assert b.step_index == 1

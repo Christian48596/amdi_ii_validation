@@ -2,6 +2,7 @@
 """Fast integrity and manuscript-number checks for the Learned AMDI release."""
 from __future__ import annotations
 
+import csv
 import hashlib
 import json
 from pathlib import Path
@@ -27,13 +28,42 @@ EXPECTED_SHA256 = {
     "checkpoints/ablation/no_switching/best_policy.pt": "280e88378181a1253ee32bebc1bc2711c362b9323d9e127e03ba9f437f05e32b",
 }
 
+REQUIRED_RESULT_FILES = (
+    "results/11_section5_diagnostics/action_energy_by_step.csv",
+    "results/11_section5_diagnostics/deterministic_candidates.csv",
+    "results/11_section5_diagnostics/status.json",
+    "results/11_section5_diagnostics/step_diagnostics.csv",
+    "results/11_section5_diagnostics/summary.csv",
+    "results/11_section5_diagnostics/terminal_metrics.csv",
+    "results/12_section5_controls/holdout_paired_differences.csv",
+    "results/12_section5_controls/holdout_runs.csv",
+    "results/12_section5_controls/holdout_summary.csv",
+    "results/12_section5_controls/pareto_baselines.csv",
+    "results/12_section5_controls/pareto_control_frontiers.csv",
+    "results/12_section5_controls/pareto_control_runs.csv",
+    "results/12_section5_controls/selected_on_validation.json",
+    "results/12_section5_controls/transfer_paired_differences.csv",
+    "results/12_section5_controls/transfer_runs.csv",
+    "results/12_section5_controls/transfer_summary.csv",
+    "results/12_section5_controls/validation_grid.csv",
+)
+
+FIGURE_STEMS = (
+    "Fig_four_region_reconstruction_and_refinement",
+    "Fig_section5_action_energy_audit",
+    "Fig_section5_matched_frontiers",
+    "Fig_resolution_transfer",
+    "Fig_robustness_ablation",
+    "Fig_vampyr_localization",
+)
+
 
 def sha256(path: Path) -> str:
-    h=hashlib.sha256()
-    with path.open("rb") as f:
-        for block in iter(lambda: f.read(1024*1024), b""):
-            h.update(block)
-    return h.hexdigest()
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
 
 
 def assert_close(actual, expected, name, atol=5e-13):
@@ -41,67 +71,199 @@ def assert_close(actual, expected, name, atol=5e-13):
         raise AssertionError(f"{name}: {actual} != {expected}")
 
 
-def main():
-    # Checkpoint integrity.
-    for rel, expected in EXPECTED_SHA256.items():
-        p=ROOT/rel
-        if not p.exists():
-            raise FileNotFoundError(rel)
-        got=sha256(p)
-        if got != expected:
-            raise AssertionError(f"SHA-256 mismatch for {rel}: {got}")
+def read_csv(relative_path: str) -> list[dict[str, str]]:
+    with (ROOT / relative_path).open(newline="", encoding="utf-8") as handle:
+        return list(csv.DictReader(handle))
 
-    cfg=json.loads((ROOT/"configs/publication.json").read_text())
-    assert cfg["training"]["seed"] == 20260811
-    assert cfg["training"]["n_steps"] == 6
-    assert cfg["ppo"]["updates"] == 400
-    assert cfg["ppo"]["trajectories_per_update"] == 16
-    assert_close(cfg["ppo"]["epsilon_ppo"], 0.10, "epsilon_ppo")
-    assert_close(cfg["ppo"]["learning_rate"], 5e-5, "learning_rate")
-    assert_close(cfg["ppo"]["c_h"], 0.02, "entropy coefficient")
-    assert_close(cfg["reward"]["lambda_occ"], 0.15, "selected lambda_occ")
 
-    summary=json.loads((ROOT/"results/publication_summary_FINAL/publication_summary_FINAL.json").read_text())
-    hold={r["method"]:r for r in summary["holdout"]}
-    assert set(hold) == {"AMDI", "Learned AMDI", "Uniform AMDI reference"}
-    assert_close(hold["AMDI"]["reference_error_mean"], 0.17496419044413442, "AMDI holdout E_ref")
-    assert_close(hold["AMDI"]["C_rel_mean"], 0.13736979166666666, "AMDI holdout C_rel")
-    assert_close(hold["Learned AMDI"]["reference_error_mean"], 0.13656908890512015, "Learned holdout E_ref")
-    assert_close(hold["Learned AMDI"]["C_rel_mean"], 0.2666015625, "Learned holdout C_rel")
-    assert_close(hold["Learned AMDI"]["RMSE_mean"], 0.05306480249629621, "Learned holdout RMSE")
-    assert_close(hold["Learned AMDI"]["SSIM_mean"], 0.7989935641859282, "Learned holdout SSIM")
+def row_for(rows, **criteria):
+    return next(
+        row for row in rows
+        if all(str(row[key]) == str(value) for key, value in criteria.items())
+    )
 
-    weights=[round(float(r["lambda_occ"]),2) for r in summary["pareto"]]
-    assert weights == [0.03,0.08,0.15,0.25,0.30,0.60]
-    p25=next(r for r in summary["pareto"] if np.isclose(float(r["lambda_occ"]),0.25))
-    assert_close(p25["RMSE_mean"],0.05140622133375324,"Pareto lambda=0.25 RMSE")
-    assert_close(p25["SSIM_mean"],0.8201866554586911,"Pareto lambda=0.25 SSIM")
 
-    pa=summary["protocol_alignment"]
-    assert pa["pass"] is True
-    assert_close(pa["final_relative_difference"],0.0,"protocol final difference")
-    assert int(pa["tree_distance"]) == 0
-    ref=summary["reference_check"]
-    assert ref["pass"] is True and ref["basis_size"] == 1024 and ref["energy_monotone"] is True
+def verify_figures() -> None:
+    expected = {f"{stem}.{suffix}" for stem in FIGURE_STEMS for suffix in ("pdf", "png")}
+    actual = {path.name for path in (ROOT / "IMG").iterdir() if path.is_file()}
+    if actual != expected:
+        raise AssertionError(
+            f"IMG contents differ from the six required figure pairs: "
+            f"missing={sorted(expected - actual)}, extra={sorted(actual - expected)}"
+        )
+    for name in sorted(expected):
+        data = (ROOT / "IMG" / name).read_bytes()
+        if name.endswith(".png"):
+            if not data.startswith(b"\x89PNG\r\n\x1a\n"):
+                raise AssertionError(f"invalid PNG signature: IMG/{name}")
+            if not data.endswith(b"IEND\xaeB\x60\x82"):
+                raise AssertionError(f"truncated PNG: IMG/{name}")
+        else:
+            if not data.startswith(b"%PDF-") or b"%%EOF" not in data[-2048:]:
+                raise AssertionError(f"invalid PDF: IMG/{name}")
 
-    required_figs=[
-        "Fig_four_region_reconstruction_and_refinement.pdf",
-        "Fig_four_region_trajectory_diagnostics.pdf",
-        "Fig_pareto_accuracy_complexity.pdf",
-        "Fig_resolution_transfer.pdf",
-        "Fig_robustness_ablation.pdf",
-        "Fig_vampyr_localization.pdf",
+
+def verify_manifest() -> None:
+    manifest = ROOT / "MANIFEST.sha256"
+    if not manifest.exists():
+        raise FileNotFoundError("MANIFEST.sha256")
+    listed = set()
+    for line in manifest.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        expected, relative = line.split("  ", 1)
+        relative = relative.removeprefix("./")
+        path = ROOT / relative
+        if not path.is_file():
+            raise FileNotFoundError(f"manifest entry missing: {relative}")
+        actual = sha256(path)
+        if actual != expected:
+            raise AssertionError(f"manifest mismatch: {relative}")
+        listed.add(relative)
+    for required in REQUIRED_RESULT_FILES:
+        if required not in listed:
+            raise AssertionError(f"new result absent from manifest: {required}")
+    for stem in FIGURE_STEMS:
+        for suffix in ("pdf", "png"):
+            relative = f"IMG/{stem}.{suffix}"
+            if relative not in listed:
+                raise AssertionError(f"figure absent from manifest: {relative}")
+
+
+def main() -> None:
+    for relative, expected in EXPECTED_SHA256.items():
+        path = ROOT / relative
+        if not path.exists():
+            raise FileNotFoundError(relative)
+        actual = sha256(path)
+        if actual != expected:
+            raise AssertionError(f"SHA-256 mismatch for {relative}: {actual}")
+
+    config = json.loads((ROOT / "configs/publication.json").read_text(encoding="utf-8"))
+    assert config["training"]["seed"] == 20260811
+    assert config["training"]["n_steps"] == 6
+    assert config["ppo"]["updates"] == 400
+    assert config["ppo"]["trajectories_per_update"] == 16
+    assert_close(config["ppo"]["epsilon_ppo"], 0.10, "epsilon_ppo")
+    assert_close(config["ppo"]["learning_rate"], 5e-5, "learning_rate")
+    assert_close(config["ppo"]["c_h"], 0.02, "entropy coefficient")
+    assert_close(config["reward"]["lambda_occ"], 0.15, "selected lambda_occ")
+
+    summary = json.loads(
+        (ROOT / "results/publication_summary_FINAL/publication_summary_FINAL.json")
+        .read_text(encoding="utf-8")
+    )
+    holdout = {row["method"]: row for row in summary["holdout"]}
+    assert set(holdout) == {"AMDI", "Learned AMDI", "Uniform AMDI reference"}
+    assert_close(holdout["AMDI"]["reference_error_mean"], 0.17496419044413442, "AMDI E_ref")
+    assert_close(holdout["AMDI"]["C_rel_mean"], 0.13736979166666666, "AMDI C_rel")
+    assert_close(holdout["Learned AMDI"]["reference_error_mean"], 0.13656908890512015, "Learned E_ref")
+    assert_close(holdout["Learned AMDI"]["C_rel_mean"], 0.2666015625, "Learned C_rel")
+    assert_close(holdout["Learned AMDI"]["RMSE_mean"], 0.05306480249629621, "Learned RMSE")
+    assert_close(holdout["Learned AMDI"]["SSIM_mean"], 0.7989935641859282, "Learned SSIM")
+
+    weights = [round(float(row["lambda_occ"]), 2) for row in summary["pareto"]]
+    assert weights == [0.03, 0.08, 0.15, 0.25, 0.30, 0.60]
+    selected_pareto = next(
+        row for row in summary["pareto"]
+        if np.isclose(float(row["lambda_occ"]), 0.25)
+    )
+    assert_close(selected_pareto["RMSE_mean"], 0.05140622133375324, "Pareto 0.25 RMSE")
+    assert_close(selected_pareto["SSIM_mean"], 0.8201866554586911, "Pareto 0.25 SSIM")
+
+    for relative in REQUIRED_RESULT_FILES:
+        if not (ROOT / relative).is_file():
+            raise FileNotFoundError(relative)
+    status = json.loads(
+        (ROOT / "results/11_section5_diagnostics/status.json").read_text(encoding="utf-8")
+    )
+    assert status["archived_table_1_check"] == "PASS"
+    assert status["mismatches"] == []
+
+    diagnostic = read_csv("results/11_section5_diagnostics/summary.csv")
+    deterministic = row_for(diagnostic, dataset="holdout", n="32", method="AMDI")
+    learned = row_for(diagnostic, dataset="holdout", n="32", method="Learned AMDI")
+    decision_one = row_for(
+        diagnostic, dataset="holdout", n="32", method="Learned: decision 1 only"
+    )
+    assert int(float(deterministic["total_executed_refine"])) == 0
+    assert int(float(deterministic["total_executed_coarsen_groups"])) == 4
+    assert int(float(learned["total_executed_refine"])) == 393
+    assert int(float(learned["total_executed_coarsen_groups"])) == 0
+    assert int(float(learned["adaptation_energy_increases"])) == 15
+    assert_close(decision_one["reference_error"], 0.13741794847368277, "decision-1 E_ref")
+
+    action_rows = read_csv("results/11_section5_diagnostics/action_energy_by_step.csv")
+    learned_steps = {
+        int(row["step"]): int(float(row["executed_refine_total"]))
+        for row in action_rows
+        if row["dataset"] == "holdout" and row["n"] == "32"
+        and row["method"] == "Learned AMDI"
+    }
+    assert learned_steps == {1: 383, 2: 10, 3: 0, 4: 0, 5: 0, 6: 0}
+
+    candidates = read_csv("results/11_section5_diagnostics/deterministic_candidates.csv")
+    selected_candidates = [
+        row for row in candidates
+        if row["dataset"] == "holdout" and row["n"] == "32" and row["selected"] == "1"
     ]
-    for f in required_figs:
-        if not (ROOT/"IMG"/f).exists():
-            raise FileNotFoundError(f"IMG/{f}")
+    assert len(selected_candidates) == 54
+    assert not any(row["candidate_type"] == "refine" for row in selected_candidates)
+
+    controls = read_csv("results/12_section5_controls/holdout_summary.csv")
+    threshold = row_for(
+        controls, dataset="holdout", n="32",
+        method="Threshold: matched validation occupancy",
+    )
+    topk = row_for(
+        controls, dataset="holdout", n="32",
+        method="Top-K: matched validation occupancy",
+    )
+    retain = row_for(controls, dataset="holdout", n="32", method="Retain initial tree")
+    assert_close(threshold["reference_error"], 0.13792153610325308, "threshold E_ref")
+    assert_close(threshold["C_rel"], 0.2604166666666667, "threshold C_rel")
+    assert_close(topk["reference_error"], 0.14174842461449016, "top-K E_ref")
+    assert_close(topk["C_rel"], 0.244140625, "top-K C_rel")
+    assert_close(retain["reference_error"], 0.17493927881362292, "retain E_ref")
+
+    selection = json.loads(
+        (ROOT / "results/12_section5_controls/selected_on_validation.json")
+        .read_text(encoding="utf-8")
+    )
+    assert selection["validation_image_seeds"] == [100, 101, 102, 103]
+    assert selection["topk_matched_validation_occupancy"]["parameter"] == 36
+    assert_close(
+        selection["threshold_matched_validation_occupancy"]["parameter"],
+        0.006125713758860572,
+        "selected threshold",
+    )
+
+    protocol = summary["protocol_alignment"]
+    assert protocol["pass"] is True
+    assert_close(protocol["final_relative_difference"], 0.0, "protocol final difference")
+    assert int(protocol["tree_distance"]) == 0
+    reference = summary["reference_check"]
+    assert (
+        reference["pass"] is True
+        and reference["basis_size"] == 1024
+        and reference["energy_monotone"] is True
+    )
+
+    citation = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
+    assert "family-names: Beck" in citation
+    assert "given-names: Joakim Henrik" in citation
+    assert "family-names: Frediani" not in citation
+    assert (ROOT / "LICENSE").is_file()
+
+    verify_figures()
+    verify_manifest()
 
     print("Learned AMDI release verification: PASS")
-    print("- checkpoint hashes: PASS")
-    print("- frozen publication configuration: PASS")
-    print("- manuscript numerical values: PASS")
-    print("- deterministic protocol/reference checks: PASS")
-    print("- publication figures present: PASS")
+    print("- checkpoint hashes and frozen configuration: PASS")
+    print("- manuscript and Section 5 numerical values: PASS")
+    print("- deterministic, control, and reference records: PASS")
+    print("- six publication figure pairs: PASS")
+    print("- citation, license, and SHA-256 manifest: PASS")
 
 
 if __name__ == "__main__":
