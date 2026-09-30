@@ -2,292 +2,148 @@
 
 Reproducibility repository for the manuscript **“Learned Adaptive Multiresolution Diffusion Imaging.”**
 
-This release is organized for independent referee verification. It contains the deterministic AMDI numerical core, the Learned AMDI policy and PPO implementation, the frozen publication configuration, all checkpoints used in the manuscript, the final numerical data tables, and scripts that regenerate every publication figure contained in this repository.
+Release `v1.1.0` contains the deterministic AMDI numerical core, the Learned AMDI implementation, the frozen publication configuration, every checkpoint used in the manuscript, case-level numerical results, validation-tuned controls, and scripts for the six publication figures.
 
-## What the repository verifies
+## Scientific scope
 
-Learned AMDI preserves the deterministic AMDI **propagate → adapt** outer-iteration ordering. The diffusion propagator is unchanged; learning controls the post-propagation adaptive multiresolution update.
+Both methods use the same **propagate → adapt** ordering and the same fixed-tree AMDI coefficient update. Learning changes only the post-propagation selection of the admissible multiresolution tree.
 
-The release includes three explicit deterministic checks:
+The revised experiments establish the following.
 
-1. **Backend regression:** the modular deterministic wrapper reproduces the retained deterministic AMDI implementation to machine precision, with identical adaptive trees.
-2. **Protocol alignment:** the baseline and modular deterministic control produce zero final field difference, identical terminal occupancy, and zero tree distance.
-3. **Uniform reference:** the complete Haar representation has 1024 active degrees of freedom at `32×32`, with monotone energy and accepted safeguards.
+- The deterministic wrapper reproduces the retained AMDI implementation to machine precision with identical trees.
+- On the nine holdout cases, deterministic AMDI accepts no refinements in 54 decisions and behaves as a nearly static initial-tree method.
+- Learned AMDI executes 383 refinements at decision 1 and 10 at decision 2, for 393 accepted refinements in total.
+- Learned AMDI lowers mean terminal reference discrepancy from `0.17496` to `0.13657`, while terminal occupancy increases from `0.13737` to `0.26660`.
+- The validation-tuned observed-detail threshold reaches `E_ref = 0.13792` at occupancy `0.26042` and gives slightly better RMSE and SSIM. The evidence therefore supports PPO as a learned allocation mechanism, not as a universally superior spatial selector.
+- The decision-1-only control reaches `E_ref = 0.13742`; later policy decisions contribute little on this static benchmark.
+- Learned tree changes can increase the AMDI energy. The fixed-tree safeguard does not imply monotone decay of the complete learned outer iteration.
 
-The manuscript comparisons are then reported only for:
-
-- **AMDI** — deterministic adaptive baseline;
-- **Learned AMDI** — learned post-propagation adaptive selector;
-- **Uniform AMDI reference** — full Haar representation used as the algorithmic reference for `E_ref`.
-
-The deterministic control is a verification pathway, not a separate method in the manuscript tables.
+Occupancy counts active degrees of freedom. It is not interpreted as wall-clock time or memory consumption.
 
 ## Referee quick start
-
-### 1. Create the environment
-
-Recommended Conda installation:
-
-```bash
-conda env create -f environment.yml
-conda activate learned-amdi
-pip install -e .
-```
-
-On a headless Linux system:
-
-```bash
-export MPLBACKEND=Agg
-```
-
-If VAMPyR is not available for the local platform, the complete AMDI/Learned-AMDI core, tests, checkpoint verification, and all non-VAMPyR figures can be run with:
 
 ```bash
 conda env create -f environment-core.yml
 conda activate learned-amdi-core
-pip install -e .
-```
-
-The archived VAMPyR/MRCPP localization data and figure remain included under `results/validation/` and `IMG/`.
-
-### 2. Run the unit tests
-
-```bash
+python -m pip install -e .
 pytest -q
-```
-
-The release contains **21 tests** covering the deterministic AMDI algebra, hierarchy operations, energy behavior, feature construction, action masking, unanimous sibling coarsening, reference construction, PPO joint probabilities, and Learned AMDI backend behavior.
-
-### 3. Run the fast release verification
-
-```bash
 python verify_release.py
 ```
 
-This checks:
-
-- SHA-256 integrity of every publication checkpoint;
-- the frozen publication configuration;
-- the numerical values quoted in the manuscript;
-- deterministic protocol/reference validation records;
-- presence of all publication figures.
-
-Expected output:
+Expected status:
 
 ```text
+22 passed
 Learned AMDI release verification: PASS
-- checkpoint hashes: PASS
-- frozen publication configuration: PASS
-- manuscript numerical values: PASS
-- deterministic protocol/reference checks: PASS
-- publication figures present: PASS
 ```
 
-### 4. Re-run the deterministic checks
+`environment.yml` additionally requests VAMPyR/MRCPP. The core calculations, checkpoint tests, archived VAMPyR results, and all manuscript figures remain available without installing VAMPyR.
 
-```bash
-python experiments/01_deterministic_backend_regression.py \
-    --config configs/publication.json
+## Frozen publication configuration
 
-python experiments/02_protocol_alignment_audit.py \
-    --config configs/publication.json
+The definitive configuration is [`configs/publication.json`](configs/publication.json). The selected policy is [`checkpoints/selected/best_policy.pt`](checkpoints/selected/best_policy.pt).
 
-python experiments/03_uniform_reference_check.py \
-    --config configs/publication.json
-```
-
-Cross-platform floating-point arithmetic can produce a coefficient difference at the level of machine roundoff. For example, the Linux verification environment used to package this release produced a maximum coefficient difference of approximately `2.2e-19`; the archived manuscript run on the reference environment recorded `0.0`. Both are far below the regression tolerance of `1e-12`, and the reconstructed field and adaptive tree agree exactly in the regression check.
-
-## Regenerate the manuscript figures
-
-### Quantitative figures
-
-No training or simulation is performed by this command. It reads the frozen publication summary only.
-
-```bash
-python make_final_metric_figures.py \
-    --summary results/publication_summary_FINAL/publication_summary_FINAL.json \
-    --outdir IMG_TEST
-```
-
-This generates:
-
-```text
-Fig_pareto_accuracy_complexity.pdf
-Fig_resolution_transfer.pdf
-Fig_robustness_ablation.pdf
-Fig_vampyr_localization.pdf
-```
-
-### Four-region reconstruction and trajectory diagnostics
-
-This is evaluation only; it loads the selected policy checkpoint and does not retrain the policy.
-
-CPU:
-
-```bash
-python make_four_region_figures.py \
-    --checkpoint checkpoints/selected/best_policy.pt \
-    --device cpu \
-    --outdir IMG_TEST
-```
-
-Apple Silicon with MPS:
-
-```bash
-python make_four_region_figures.py \
-    --checkpoint checkpoints/selected/best_policy.pt \
-    --device mps \
-    --outdir IMG_TEST
-```
-
-This generates:
-
-```text
-Fig_four_region_reconstruction_and_refinement.pdf
-Fig_four_region_trajectory_diagnostics.pdf
-```
-
-The checked publication figures are retained under [`IMG/`](IMG/).
-
-## Reproduce the numerical summaries from the archived checkpoints
-
-To rerun the fixed holdout, Pareto, resolution-transfer, reward-ablation, and three-seed robustness evaluations **without training**:
-
-```bash
-python reproduce_final_results.py \
-    --device cpu \
-    --outdir reproduced_results
-```
-
-On Apple Silicon, `--device mps` can substantially reduce runtime. A full CPU reevaluation includes the 64×64 and 128×128 transfer cases and can take several minutes. The script prints progress by validation block, uses exactly the image seeds, noise seeds, policy checkpoints, and evaluation subsets used for the publication dataset, and then compares the recomputed values with the archived manuscript values. It reports `PASS` when they agree within floating-point tolerance.
-
-The VAMPyR/MRCPP localization analysis is intentionally separate because it requires the optional VAMPyR dependency:
-
-```bash
-python experiments/10_vampyr_localization_crosscheck.py \
-    --checkpoint checkpoints/selected/best_policy.pt \
-    --device cpu
-```
-
-VAMPyR/MRCPP is an **independent localization cross-check**, not the production AMDI propagator.
-
-## Frozen publication protocol
-
-The definitive configuration is:
-
-```text
-configs/publication.json
-```
-
-Principal values:
+Principal settings are:
 
 | Quantity | Value |
 |---|---:|
 | training resolution | `32×32` |
 | AMDI outer iterations | `6` |
 | selected training seed | `20260811` |
-| actor hidden layers | `[64, 64]` |
-| critic hidden layers | `[64, 64]` |
-| activation | `tanh` |
-| `gamma` | `1.0` |
-| GAE `lambda` | `0.95` |
-| PPO clip | `0.10` |
-| critic coefficient | `0.5` |
-| entropy coefficient | `0.02` |
-| Adam learning rate | `5e-5` |
-| PPO epochs/update | `4` |
-| trajectories/update | `16` |
+| actor/critic hidden layers | `[64, 64]` |
 | PPO updates | `400` |
-| max gradient norm | `0.5` |
-| `lambda_err` | `1.0` |
+| trajectories per update | `16` |
+| learning rate | `5e-5` |
 | selected `lambda_occ` | `0.15` |
 | `lambda_sw` | `0.02` |
 
-AMDI parameters are also frozen in the same JSON file.
+## Archived numerical results
 
-## Publication numerical results
+| Method | `E_ref` | `C_rel` | RMSE | SSIM |
+|---|---:|---:|---:|---:|
+| Deterministic AMDI | 0.17496 | 0.13737 | 0.05391 | 0.80851 |
+| Learned AMDI | 0.13657 | 0.26660 | 0.05306 | 0.79899 |
+| Retain initial tree | 0.17494 | 0.13867 | 0.05392 | 0.80813 |
+| Top-`K`, validation-occupancy matched | 0.14175 | 0.24414 | 0.05290 | 0.80628 |
+| Threshold, validation-occupancy matched | 0.13792 | 0.26042 | 0.05266 | 0.80195 |
 
-The definitive machine-readable dataset is:
-
-```text
-results/publication_summary_FINAL/publication_summary_FINAL.json
-```
-
-The nine-case holdout values are:
-
-| Method | `E_ref` | `C_rel` | RMSE | SSIM | mean switching |
-|---|---:|---:|---:|---:|---:|
-| AMDI | 0.17496 | 0.13737 | 0.05391 | 0.80851 | 0.000217 |
-| Learned AMDI | 0.13657 | 0.26660 | 0.05306 | 0.79899 | 0.02132 |
-| Uniform AMDI reference | 0 | 1 | 0.07141 | 0.70150 | 0 |
-
-The selected Learned AMDI policy therefore decreases mean terminal reference error by approximately **21.9%** relative to AMDI, while using a larger terminal representation. The repository does **not** interpret occupancy as wall-clock computational cost.
-
-For the fixed four-image Pareto subset, the lowest RMSE and highest SSIM occur at `lambda_occ = 0.25`.
-
-## Data splits and deterministic seeds
-
-Image seeds:
+The complete records are stored in:
 
 ```text
-training:   0 ... 15
-validation: 100 ... 103
-test:       1000 ... 1007
+results/publication_summary_FINAL/
+results/11_section5_diagnostics/
+results/12_section5_controls/
+results/validation/
 ```
 
-The publication evaluations additionally use fixed deterministic noise-seed conventions documented in [`REPRODUCIBILITY.md`](REPRODUCIBILITY.md).
+The control parameters were selected on validation images `100–103` and frozen before holdout testing. Case-level paired differences are retained rather than only aggregate means.
+
+## Re-run the Section 5 audit and controls
+
+These commands perform evaluation only and use the selected checkpoint:
+
+```bash
+python experiments/11_action_energy_audit.py --device cpu --include-transfer
+python experiments/12_selector_controls.py --device cpu --include-transfer
+```
+
+The first command records proposed and executed actions separately, active degrees of freedom before and after adaptation, all deterministic candidate scores, trajectory errors, occupancy, switching, and energies. The second performs validation-only control selection and evaluates retain-tree, top-`K`, and fixed-threshold controls on the frozen holdout, Pareto, and transfer cases.
+
+## Regenerate the six manuscript figures
+
+```bash
+python make_all_manuscript_figures.py --device cpu --outdir IMG_TEST
+```
+
+The command writes the six checked manuscript figures as vector PDF and
+600-dpi PNG pairs.  By default, the four-region layout uses the archived
+selected-checkpoint panels under `figure_assets/`.  To recompute those panels
+from the selected checkpoint before plotting, add
+`--recompute-four-region`.  The checked outputs are under [`IMG/`](IMG/).
+
+## Other reproducibility levels
+
+Deterministic regression:
+
+```bash
+python experiments/01_deterministic_backend_regression.py --config configs/publication.json
+python experiments/02_protocol_alignment_audit.py --config configs/publication.json
+python experiments/03_uniform_reference_check.py --config configs/publication.json
+```
+
+Checkpoint-only reevaluation of the original holdout, PPO Pareto family, transfer, reward ablation, and policy-seed robustness:
+
+```bash
+python reproduce_final_results.py --device cpu --outdir reproduced_results
+```
+
+See [`REPRODUCIBILITY.md`](REPRODUCIBILITY.md) and [`docs/RESULTS_MAP.md`](docs/RESULTS_MAP.md) for the exact data and manuscript mapping.
+
+## Interpretation limits
+
+This archive does not establish a runtime or memory speedup from occupancy, superior spatial selection relative to the tuned threshold rule, or a substantive sequential advantage on the static benchmark. Transfer controls are not occupancy matched at the two finer resolutions. VAMPyR/MRCPP is an order-five projection of the clean analytic target at precision `10^-3` and maximum depth eight; it is a qualitative localization diagnostic, not validation of the learned trajectory.
 
 ## Repository structure
 
 ```text
 .
-├── amdi/                         deterministic AMDI numerical core
-├── learned_amdi/                 learned selector, features, PPO, evaluation
-├── checkpoints/
-│   ├── selected/                 selected policy used for main comparisons
-│   ├── pareto/                   six occupancy-penalty policies
-│   ├── robustness/               three independent training seeds
-│   └── ablation/                 reward-ablation policies
-├── configs/
-│   └── publication.json          frozen publication configuration
-├── experiments/                  validation/training/evaluation entry points
+├── amdi/                          deterministic AMDI core
+├── learned_amdi/                  learned selector and PPO implementation
+├── checkpoints/                   selected, Pareto, robustness, and ablation policies
+├── configs/publication.json       frozen publication configuration
+├── experiments/                   executable validation and evaluation studies
 ├── results/
-│   ├── publication_summary_FINAL/ definitive manuscript dataset
-│   └── validation/               deterministic/reference validation records
-├── IMG/                          checked publication figures (PDF + PNG)
-├── tests/                        unit and regression tests
-├── make_final_metric_figures.py
-├── make_four_region_figures.py
-├── reproduce_final_results.py
-├── verify_release.py
-└── REPRODUCIBILITY.md
+│   ├── publication_summary_FINAL/ original publication aggregates
+│   ├── 11_section5_diagnostics/   action, tree, trajectory, and energy audit
+│   ├── 12_section5_controls/      tuned controls, paired tests, and frontiers
+│   └── validation/                deterministic and VAMPyR records
+├── IMG/                            six final figure pairs
+├── tests/                          unit and regression tests
+├── docs/                           protocol, provenance, and results map
+├── verify_release.py               fast numerical and file-integrity check
+└── tools/generate_manifest.py      cross-platform SHA-256 manifest generator
 ```
 
-## Important interpretation limits
+## License and citation
 
-This repository supports the claims made in the manuscript, specifically:
-
-- exact protocol alignment of the deterministic regression pathways;
-- an accuracy–representation family controlled by `lambda_occ`;
-- lower selected-policy `E_ref` and slightly lower RMSE on the nine-case holdout, with larger occupancy and slightly lower SSIM;
-- resolution transfer to `64×64` and `128×128` without retraining;
-- robustness across three independent training seeds;
-- the essential role of the occupancy reward term;
-- a coupled, nonmonotonic effect of the switching term;
-- qualitative VAMPyR/MRCPP corroboration of spatial localization.
-
-The repository does **not** claim:
-
-- wall-clock or memory speedup from `C_rel` alone;
-- uniform dominance of Learned AMDI over deterministic AMDI;
-- quantitative equivalence between Haar refinement levels and VAMPyR/MRCPP effective levels;
-- transfer across diffusion parameters not tested here.
-
-## Provenance
-
-The retained deterministic `amdi/` core originated from the companion AMDI validation archive used during development. Its source-archive SHA-256 is recorded in [`docs/PROVENANCE.md`](docs/PROVENANCE.md). The public release keeps the numerical core and the exact regression tests required for verification, while obsolete intermediate checkpoints and superseded result folders have been removed.
-
-## License
-
-A software license has deliberately **not** been selected automatically. Before making the repository public, the authors should choose the desired license. A private repository shared with referees can be used as-is.
+The software is released under the MIT License; see [`LICENSE`](LICENSE). Citation metadata are provided in [`CITATION.cff`](CITATION.cff).

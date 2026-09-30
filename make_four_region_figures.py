@@ -8,12 +8,14 @@ This submission-ready version produces the reconstruction/refinement figure with
   2. a dedicated grayscale intensity colorbar on the far left,
   3. a dedicated refinement-level colorbar on the far right,
   4. spacer columns so the side colorbars do not overlap with panel labels,
-     tick labels, or axis titles.
+     tick labels, or axis labels,
+  5. bold panel identifiers without redundant panel titles, and
+  6. enlarged, embedded journal-scale typography and marks.
 
 Run from the Learned AMDI repository:
-    python make_amdi2_four_region_figure_SUBMISSION_READY.py \
-        --checkpoint checkpoints/publication_final/best_policy.pt \
-        --device mps \
+    python make_four_region_figures.py \
+        --checkpoint checkpoints/selected/best_policy.pt \
+        --device cpu \
         --outdir IMG
 
 The figure uses only the display names "AMDI" and "Learned AMDI".
@@ -49,7 +51,7 @@ def panel(ax, label):
         transform=ax.transAxes,
         ha="left",
         va="top",
-        fontsize=10,
+        fontsize=16.0,
         fontweight="bold",
         bbox=dict(facecolor="white", edgecolor="none", alpha=0.84, pad=0.8),
         zorder=20,
@@ -74,8 +76,7 @@ def save(fig, outdir, stem):
     plt.close(fig)
 
 
-def style_image_axis(ax, title, label):
-    ax.set_title(title, pad=10)
+def style_image_axis(ax, label):
     ax.set_xlabel(r"$x$ [-]")
     ax.set_ylabel(r"$y$ [-]")
     ax.set_xticks([0.0, 0.5, 1.0])
@@ -86,12 +87,34 @@ def style_image_axis(ax, title, label):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--checkpoint", default="checkpoints/publication_final/best_policy.pt")
+    p.add_argument("--checkpoint", default="checkpoints/selected/best_policy.pt")
     p.add_argument("--device", default="auto")
     p.add_argument("--outdir", default="IMG")
     p.add_argument("--n", type=int, default=32)
     p.add_argument("--noise-seed", type=int, default=137)
     args = p.parse_args()
+
+    # Sized for reduction to a journal text width of approximately 6.5--7 in.
+    # The final printed text is therefore about 9--10 pt rather than the
+    # undersized 6--7 pt produced by the earlier figure sources.
+    plt.rcParams.update({
+        "font.family": "STIXGeneral",
+        "mathtext.fontset": "stix",
+        "font.size": 14.0,
+        "axes.labelsize": 15.5,
+        "xtick.labelsize": 13.0,
+        "ytick.labelsize": 13.0,
+        "legend.fontsize": 12.5,
+        "lines.linewidth": 2.0,
+        "lines.markersize": 7.0,
+        "axes.linewidth": 1.0,
+        "xtick.major.width": 1.0,
+        "ytick.major.width": 1.0,
+        "xtick.major.size": 4.5,
+        "ytick.major.size": 4.5,
+        "pdf.fonttype": 42,
+        "ps.fonttype": 42,
+    })
 
     if args.device == "auto":
         dev = "mps" if torch.backends.mps.is_available() else "cpu"
@@ -132,7 +155,7 @@ def main():
     #         [right spacer] [right colorbar]
     # This guarantees identical panel sizes while keeping the colorbars clear
     # of the panel y-labels and tick labels.
-    fig = plt.figure(figsize=(11.4, 6.8))
+    fig = plt.figure(figsize=(11.0, 6.35))
     gs = GridSpec(
         2,
         7,
@@ -141,10 +164,10 @@ def main():
         height_ratios=[1.0, 1.0],
         left=0.055,
         right=0.975,
-        bottom=0.09,
-        top=0.92,
+        bottom=0.105,
+        top=0.97,
         wspace=0.26,
-        hspace=0.40,
+        hspace=0.28,
     )
 
     # panel axes: all six are placed in the same three central columns
@@ -219,12 +242,12 @@ def main():
     )
 
     # style all six panel axes identically
-    style_image_axis(ax_a, "Clean image", "(a)")
-    style_image_axis(ax_b, "Noisy input", "(b)")
-    style_image_axis(ax_c, "AMDI", "(c)")
-    style_image_axis(ax_d, "Learned AMDI", "(d)")
-    style_image_axis(ax_e, "AMDI refinement", "(e)")
-    style_image_axis(ax_f, "Learned AMDI refinement", "(f)")
+    style_image_axis(ax_a, "(a)")
+    style_image_axis(ax_b, "(b)")
+    style_image_axis(ax_c, "(c)")
+    style_image_axis(ax_d, "(d)")
+    style_image_axis(ax_e, "(e)")
+    style_image_axis(ax_f, "(f)")
 
     # left intensity colorbar (shared by clean/noisy/AMDI/Learned AMDI)
     cbar_left = fig.colorbar(im_gray, cax=cax_left, orientation="vertical")
@@ -232,7 +255,7 @@ def main():
     cbar_left.ax.yaxis.set_ticks_position("left")
     cbar_left.ax.yaxis.set_label_position("left")
     cbar_left.ax.tick_params(pad=2)
-    cbar_left.set_label("normalized intensity [-]", rotation=90, labelpad=8)
+    cbar_left.set_label("Normalized intensity [-]", rotation=90, labelpad=8)
 
     # right refinement colorbar (shared by AMDI / Learned AMDI refinement)
     cbar_right = fig.colorbar(ax_f_im, cax=cax_right, orientation="vertical")
@@ -240,7 +263,7 @@ def main():
     cbar_right.ax.yaxis.set_ticks_position("right")
     cbar_right.ax.yaxis.set_label_position("right")
     cbar_right.ax.tick_params(pad=2)
-    cbar_right.set_label("leaf refinement level [-]", rotation=90, labelpad=10)
+    cbar_right.set_label("Leaf refinement level [-]", rotation=90, labelpad=10)
 
     save(fig, Path(args.outdir), "Fig_four_region_reconstruction_and_refinement")
 
@@ -249,8 +272,8 @@ def main():
     # ================================================================
     steps = np.arange(1, n_steps + 1)
 
-    fig, axes = plt.subplots(1, 3, figsize=(9.20, 2.90))
-    fig.subplots_adjust(left=0.070, right=0.99, bottom=0.21, top=0.82, wspace=0.62)
+    fig, axes = plt.subplots(1, 3, figsize=(10.2, 3.45))
+    fig.subplots_adjust(left=0.075, right=0.99, bottom=0.23, top=0.80, wspace=0.68)
 
     fields = [
         ("reference_error", r"$E_{\rm ref}$ [-]"),

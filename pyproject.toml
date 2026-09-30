@@ -4,8 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "learned-amdi-validation"
-version = "1.0.0"
+version = "1.1.0"
 description = "Reproducible validation suite for Learned Adaptive Multiresolution Diffusion Imaging"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+  {name = "Christian Tantardini"},
+  {name = "Stig Rune Jensen"},
+  {name = "Roberto Di Remigio Eikås"},
+  {name = "Joakim Henrik Beck"}
+]
 requires-python = ">=3.10"
 dependencies = [
   "numpy>=1.24",

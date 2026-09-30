@@ -1,0 +1,71 @@
+{
+  "validation_image_seeds": [
+    100,
+    101,
+    102,
+    103
+  ],
+  "validation_noise_seed_rule": "20000 + image_seed",
+  "target_learned_validation_C_rel": 0.23681640625,
+  "topk_best_validation_return": {
+    "control": "Top-K observed detail",
+    "mode": "topk",
+    "parameter": 32,
+    "reference_error": 0.1322309914510457,
+    "C_rel": 0.2236328125,
+    "RMSE": 0.051491349768841496,
+    "SSIM": 0.8209899699357126,
+    "switching_mean": 0.015625,
+    "return": -1.0659434053349959,
+    "active_dofs": 229.0,
+    "total_executed_refine": 32.0,
+    "total_executed_coarsen_groups": 0.0,
+    "n_cases": 4
+  },
+  "topk_matched_validation_occupancy": {
+    "control": "Top-K observed detail",
+    "mode": "topk",
+    "parameter": 36,
+    "reference_error": 0.12987880891475578,
+    "C_rel": 0.2353515625,
+    "RMSE": 0.05160786057624461,
+    "SSIM": 0.819141048867136,
+    "switching_mean": 0.017578125,
+    "return": -1.0665383643398145,
+    "active_dofs": 241.0,
+    "total_executed_refine": 36.0,
+    "total_executed_coarsen_groups": 0.0,
+    "n_cases": 4
+  },
+  "threshold_best_validation_return": {
+    "control": "Observed-detail threshold",
+    "mode": "threshold",
+    "parameter": 0.006875338911534438,
+    "reference_error": 0.13669135084190037,
+    "C_rel": 0.203125,
+    "RMSE": 0.050820444120650586,
+    "SSIM": 0.8249759832186392,
+    "switching_mean": 0.01220703125,
+    "return": -1.0664883757512682,
+    "active_dofs": 208.0,
+    "total_executed_refine": 25.0,
+    "total_executed_coarsen_groups": 0.0,
+    "n_cases": 4
+  },
+  "threshold_matched_validation_occupancy": {
+    "control": "Observed-detail threshold",
+    "mode": "threshold",
+    "parameter": 0.006125713758860572,
+    "reference_error": 0.12894103448796143,
+    "C_rel": 0.23974609375,
+    "RMSE": 0.051598162260717034,
+    "SSIM": 0.8158002067735244,
+    "switching_mean": 0.018310546875,
+    "return": -1.0665587360829836,
+    "active_dofs": 245.5,
+    "total_executed_refine": 37.5,
+    "total_executed_coarsen_groups": 0.0,
+    "n_cases": 4
+  },
+  "note": "All four parameter choices were frozen before the holdout and Pareto evaluations."
+}

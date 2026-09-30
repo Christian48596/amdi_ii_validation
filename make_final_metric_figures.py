@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Final publication figures for Learned AMDI.
 
-This script reads ONLY publication_summary_FINAL.json.
+This script reads publication_summary_FINAL.json and the archived
+Section 5 transfer-control summary.
 No training and no numerical simulation are performed.
 
 Display names used in every figure:
@@ -15,6 +16,7 @@ once in the manuscript caption/method section instead of cluttering the plot.
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 from pathlib import Path
 
@@ -32,7 +34,7 @@ def panel(ax, label):
         0.025, 0.975, label,
         transform=ax.transAxes,
         ha="left", va="top",
-        fontsize=10, fontweight="bold",
+        fontsize=12.5, fontweight="bold",
         bbox=dict(facecolor="white", edgecolor="none", alpha=0.82, pad=0.8),
         zorder=20,
     )
@@ -47,7 +49,15 @@ def save(fig, outdir, stem):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--summary", default="publication_summary_FINAL.json")
+    parser.add_argument(
+        "--summary",
+        default="results/publication_summary_FINAL/publication_summary_FINAL.json",
+    )
+    parser.add_argument(
+        "--transfer-summary",
+        default="results/12_section5_controls/transfer_summary.csv",
+        help="Archived four-method resolution-transfer summary.",
+    )
     parser.add_argument("--outdir", default="IMG")
     args = parser.parse_args()
 
@@ -55,14 +65,22 @@ def main():
     outdir = Path(args.outdir)
 
     plt.rcParams.update({
-        "font.size": 9,
-        "axes.labelsize": 9,
-        "axes.titlesize": 9,
-        "xtick.labelsize": 8,
-        "ytick.labelsize": 8,
-        "legend.fontsize": 8,
-        "lines.linewidth": 1.45,
-        "lines.markersize": 5.5,
+        "font.family": "STIXGeneral",
+        "mathtext.fontset": "stix",
+        "font.size": 11.0,
+        "axes.labelsize": 11.5,
+        "xtick.labelsize": 10.0,
+        "ytick.labelsize": 10.0,
+        "legend.fontsize": 9.5,
+        "lines.linewidth": 2.0,
+        "lines.markersize": 7.0,
+        "axes.linewidth": 1.0,
+        "xtick.major.width": 1.0,
+        "ytick.major.width": 1.0,
+        "xtick.major.size": 4.0,
+        "ytick.major.size": 4.0,
+        "pdf.fonttype": 42,
+        "ps.fonttype": 42,
     })
 
     # ================================================================
@@ -100,13 +118,13 @@ def main():
         if np.isclose(w, 0.25):
             axes[0].annotate(
                 r"$\lambda_{\rm occ}=0.25$", (x, y),
-                xytext=(12, -12), textcoords="offset points", fontsize=7.0,
+                xytext=(12, -12), textcoords="offset points", fontsize=9.0,
                 bbox=dict(facecolor="white", edgecolor="none", alpha=0.88, pad=0.5),
             )
         elif np.isclose(w, 0.15):
             axes[0].annotate(
                 r"$\lambda_{\rm occ}=0.15$", (x, y),
-                xytext=(10, 6), textcoords="offset points", fontsize=7.0,
+                xytext=(10, 6), textcoords="offset points", fontsize=9.0,
                 bbox=dict(facecolor="white", edgecolor="none", alpha=0.88, pad=0.5),
             )
 
@@ -115,24 +133,38 @@ def main():
     # ================================================================
     # 2. Resolution transfer
     # ================================================================
-    transfer = summary["resolution_transfer"]
+    with Path(args.transfer_summary).open(newline="", encoding="utf-8") as stream:
+        transfer = list(csv.DictReader(stream))
+
     method_map = {
-        "AMDI": "AMDI",
+        "AMDI": "Deterministic AMDI",
         "Learned AMDI": "Learned AMDI",
+        "Top-K: matched validation occupancy": r"Top-$K$ control",
+        "Threshold: matched validation occupancy": "Threshold control",
+    }
+    styles = {
+        "AMDI": dict(color="#4D4D4D", marker="s", linestyle="--"),
+        "Learned AMDI": dict(color="#0072B2", marker="o", linestyle="-"),
+        "Top-K: matched validation occupancy": dict(
+            color="#D55E00", marker="^", linestyle="-."
+        ),
+        "Threshold: matched validation occupancy": dict(
+            color="#009E73", marker="D", linestyle=":"
+        ),
     }
     ns = sorted({int(r["n"]) for r in transfer})
 
     fields = [
-        ("RMSE_mean", "RMSE [-]"),
-        ("SSIM_mean", "SSIM [-]"),
-        ("reference_error_mean", r"$E_{\rm ref}$ [-]"),
-        ("C_rel_mean", r"$C_{\rm rel}$ [-]"),
+        ("RMSE", "RMSE [-]"),
+        ("SSIM", "SSIM [-]"),
+        ("reference_error", r"$E_{\rm ref}$ [-]"),
+        ("C_rel", r"$C_{\rm rel}$ [-]"),
     ]
 
-    fig, axes = plt.subplots(2, 2, figsize=(7.8, 5.35))
+    fig, axes = plt.subplots(2, 2, figsize=(7.8, 5.65))
     fig.subplots_adjust(
-        left=0.10, right=0.985, bottom=0.10, top=0.87,
-        wspace=0.30, hspace=0.38
+        left=0.105, right=0.985, bottom=0.105, top=0.845,
+        wspace=0.31, hspace=0.42
     )
     axes = axes.ravel()
 
@@ -146,16 +178,24 @@ def main():
                     if int(r["n"]) == n and r["method"] == raw_name
                 )
                 ys.append(F(row[key]))
-            marker = "s" if display_name == "AMDI" else "o"
-            ax.plot(ns, ys, marker=marker, label=display_name)
+            ax.plot(
+                ns,
+                ys,
+                label=display_name,
+                markerfacecolor="white",
+                markeredgewidth=1.35,
+                linewidth=2.15,
+                markersize=7.5,
+                **styles[raw_name],
+            )
 
-        ax.set_xlabel(r"linear resolution $n$ [pixels]")
-        ax.set_ylabel(ylabel)
+        ax.set_xlabel(r"Image resolution $N$")
+        ax.set_ylabel(ylabel, labelpad=5)
         ax.set_xscale("log", base=2)
         ax.set_xticks(ns)
         ax.set_xticklabels([str(v) for v in ns])
-        ax.grid(True, alpha=0.20)
-        ax.margins(y=0.10)
+        ax.grid(True, color="0.82", linewidth=0.7, alpha=0.65)
+        ax.margins(x=0.08, y=0.13)
         panel(ax, f"({chr(97+j)})")
 
         if handles is None:
@@ -163,7 +203,8 @@ def main():
 
     fig.legend(
         handles, labels, loc="upper center",
-        bbox_to_anchor=(0.54, 0.975), ncol=2, frameon=False
+        bbox_to_anchor=(0.545, 0.975), ncol=2, frameon=False,
+        columnspacing=1.8, handlelength=2.7, handletextpad=0.65
     )
     save(fig, outdir, "Fig_resolution_transfer")
 
@@ -195,7 +236,7 @@ def main():
         ax.plot(x, y, "o")
         ax.annotate(
             str(seed)[-2:], (x, y),
-            xytext=offsets[seed], textcoords="offset points", fontsize=7.2,
+            xytext=offsets[seed], textcoords="offset points", fontsize=9.0,
             bbox=dict(facecolor="white", edgecolor="none", alpha=0.84, pad=0.4),
         )
     ax.set_xlabel(r"$C_{\rm rel}$ [-]")
@@ -241,7 +282,7 @@ def main():
         dx, dy, txt = cfg[key]
         ax.annotate(
             txt, (x, y), xytext=(dx, dy),
-            textcoords="offset points", fontsize=7.1,
+            textcoords="offset points", fontsize=9.0,
             bbox=dict(facecolor="white", edgecolor="none", alpha=0.84, pad=0.4),
         )
     ax.set_xlabel(r"$C_{\rm rel}$ [-]")
@@ -285,7 +326,7 @@ def main():
     )
 
     for bars in (b1, b2, b3):
-        ax.bar_label(bars, fmt="%.2f", padding=2, fontsize=7.0)
+        ax.bar_label(bars, fmt="%.2f", padding=2, fontsize=9.5)
 
     save(fig, outdir, "Fig_vampyr_localization")
 

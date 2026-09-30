@@ -1,16 +1,18 @@
 # GitHub / referee release checklist
 
-- [x] Final publication configuration is `configs/publication.json`.
-- [x] Selected policy checkpoint is included.
-- [x] Six Pareto checkpoints are included.
-- [x] Three final robustness checkpoints are included.
-- [x] Reward-ablation checkpoints are included.
-- [x] Final machine-readable publication data are included.
-- [x] Publication figures are included as PDF and PNG.
-- [x] `pytest -q` passes: 21 tests.
+- [x] Frozen configuration is `configs/publication.json`.
+- [x] Selected, Pareto, robustness, and reward-ablation checkpoints are included.
+- [x] Original publication aggregates are included.
+- [x] Complete Section 5 action/energy audit is included.
+- [x] Validation-selected controls and paired case-level results are included.
+- [x] Transfer controls at `32x32`, `64x64`, and `128x128` are included.
+- [x] Exactly six final manuscript figures are included as PDF and PNG.
+- [x] Every final figure has a regeneration script.
+- [x] Terminal RMSE/SSIM clipping and VAMPyR interpretation are documented.
+- [x] `pytest -q` passes: 22 tests.
 - [x] `python verify_release.py` passes.
-- [x] Deterministic protocol-alignment check passes.
-- [x] Uniform-reference check passes.
-- [x] macOS metadata, caches, old checkpoints, and superseded results removed.
-- [ ] Authors select a software license before making the repository public.
-- [ ] Replace any manuscript-specific repository URL/DOI once assigned.
+- [x] `MANIFEST.sha256` verifies.
+- [x] MIT `LICENSE` is included.
+- [x] `CITATION.cff` matches the manuscript authors.
+- [x] macOS metadata, caches, obsolete figures, and duplicate folders are absent.
+- [ ] Add the final GitHub URL and archival DOI after they are assigned.

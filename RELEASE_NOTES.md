@@ -1,23 +1,28 @@
-# Referee release notes — v1.0.0
+# Release notes — v1.1.0
 
-This package is a cleaned reproducibility release prepared from the development archive.
+This release aligns the public reproducibility archive with the revised manuscript.
 
-Removed before release:
+## Added
 
-- superseded checkpoints and intermediate training experiments;
-- obsolete adapt-before-propagate development artifacts;
-- duplicate result folders;
-- caches, compiled Python files, macOS metadata, and package-build metadata;
-- internal manuscript-development naming from the public-facing code and data.
+- complete nine-case, six-decision action/tree/trajectory/energy audit;
+- deterministic candidate energies and tree penalties;
+- decision-1-only temporal control;
+- validation-tuned retain-tree, top-`K`, and fixed-threshold controls;
+- paired case-level holdout and transfer differences;
+- common-four-image PPO/control frontiers;
+- final Figure 2 and Figure 3 generation scripts;
+- an explicit regression test that executes the learned tree update;
+- cross-platform manifest generation and GitHub Actions verification.
 
-Retained:
+## Updated
 
-- deterministic AMDI numerical core;
-- Learned AMDI implementation;
-- all final publication checkpoints;
-- final numerical summaries and validation records;
-- unit/regression tests;
-- publication figure scripts and checked figures;
-- optional VAMPyR/MRCPP localization cross-check.
+- all six manuscript figures with larger typography and marks, no panel titles, and bold panel identifiers;
+- manuscript-to-data mapping, reproducibility instructions, validation status, citation metadata, and release verification;
+- plotting scripts for the final journal presentation.
 
-The release changes repository organization and public naming only; it does not alter the numerical algorithms or publication checkpoints.
+## Removed
+
+- superseded trajectory-only and PPO-only frontier figures;
+- macOS metadata, caches, compiled Python files, and duplicate packaging directories.
+
+No numerical algorithm, frozen publication configuration, or selected checkpoint was changed.
